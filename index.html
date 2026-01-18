@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Read Card Labeller</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Quick Read Card</h1>
+            <p class="subtitle">Rapidly label your data with keyboard shortcuts</p>
+        </header>
+
+        <!-- Step 1: Input -->
+        <section id="step-1" class="step active glass-pane">
+            <div class="form-group">
+                <label for="table-input">Paste Excel or Markdown Table</label>
+                <textarea id="table-input" placeholder="Paste your Excel table here (Ctrl+V)
+Or Markdown:
+| ID | Content |
+|---|---|
+| 1 | Sample |"></textarea>
+            </div>
+            <div style="text-align: right;">
+                <button id="btn-parse">Next: Configure &rarr;</button>
+            </div>
+        </section>
+
+        <!-- Step 2: Config -->
+        <section id="step-2" class="step glass-pane">
+            <h3 style="margin-bottom: 1.5rem;">Configure Extraction</h3>
+
+            <div class="form-group">
+                <label for="column-select">Extract Content From Column</label>
+                <select id="column-select"></select>
+            </div>
+
+            <p style="margin-top: 2rem; color: var(--text-dim); text-align: center;">Set labels for your arrow keys:</p>
+            <div class="key-grid">
+                <input type="text" id="up-label" class="key-input" placeholder="Up Label" value="Positive">
+                <input type="text" id="left-label" class="key-input" placeholder="Left Label" value="Neutral">
+                <input type="text" id="right-label" class="key-input" placeholder="Right Label" value="Negative">
+                <input type="text" id="down-label" class="key-input" placeholder="Down Label" value="Irrelevant">
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                <button id="btn-back-1" class="secondary">&larr; Back</button>
+                <button id="btn-start">Start Labelling &rarr;</button>
+            </div>
+        </section>
+
+        <!-- Step 3: Labelling -->
+        <section id="step-3" class="step labeller">
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-fill"></div>
+            </div>
+
+            <div class="labelling-area">
+                <div id="card-card" class="card-display glass-pane">
+                    <!-- Content injected here -->
+                </div>
+
+                <div class="visual-keys">
+                    <div id="hint-up" class="key-hint" style="grid-area: v-up;">
+                        <span>&uarr;</span><label-text>Up</label-text>
+                    </div>
+                    <div id="hint-left" class="key-hint" style="grid-area: v-left;">
+                        <span>&larr;</span><label-text>Left</label-text>
+                    </div>
+                    <div id="hint-right" class="key-hint" style="grid-area: v-right;">
+                        <span>&rarr;</span><label-text>Right</label-text>
+                    </div>
+                    <div id="hint-down" class="key-hint" style="grid-area: v-down;">
+                        <span>&darr;</span><label-text>Down</label-text>
+                    </div>
+                </div>
+
+                <div style="color: var(--text-dim); font-size: 0.9rem;">
+                    Use Arrow Keys to label. <span id="counter">0/0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 4: Results -->
+        <section id="step-4" class="step glass-pane completion-overlay">
+            <h2 style="margin-bottom: 1rem;">Labelling Complete!</h2>
+            <p class="subtitle">A new column has been added to your table.</p>
+
+            <div class="result-table-wrapper">
+                <table id="result-table">
+                    <thead id="result-thead"></thead>
+                    <tbody id="result-tbody"></tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+                <button id="btn-restart" class="secondary">Start Over</button>
+                <button id="btn-copy" class="secondary">Copy Markdown</button>
+                <button id="btn-copy-excel" class="secondary">Copy for Excel</button>
+                <button id="btn-export">Download Markdown</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
