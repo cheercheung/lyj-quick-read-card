@@ -123,24 +123,17 @@ window.addEventListener('keydown', (e) => {
     if (!config.labels[e.key]) return;
 
     const label = config.labels[e.key];
-    const card = document.getElementById('card-card');
 
-    // Visual Feedback
+    // Immediate Visual Feedback for Key Hint
     const hintId = `hint-${e.key.replace('Arrow', '').toLowerCase()}`;
     const hint = document.getElementById(hintId);
     hint.classList.add('active');
-    setTimeout(() => hint.classList.remove('active'), 150);
+    setTimeout(() => hint.classList.remove('active'), 100);
 
-    // Swipe Animation
-    const animClass = `swipe-${e.key.replace('Arrow', '').toLowerCase()}`;
-    card.classList.add(animClass);
-
-    // Save result after animation
-    setTimeout(() => {
-        results.push(label);
-        currentIndex++;
-        updateCard();
-    }, 200);
+    // Immediate Logic Processing (No Animation/Delay)
+    results.push(label);
+    currentIndex++;
+    updateCard();
 });
 
 // --- Step 4: Completion ---
