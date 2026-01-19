@@ -4,21 +4,21 @@
 
 **Quick Read Card** 是一款极简、高效率的数据标注工具。它能将 Excel 或 Markdown 表格的每一行转换为卡片，让你通过键盘方向键实现极速分类标注。
 
-![Demo Screenshot](https://via.placeholder.com/800x450.png?text=Quick+Read+Card+UI)
+![Demo Screenshot](./demo.webp)
 
 ## ✨ 特性
 
 - **极简黑白视觉**：专注内容，无干扰，无动画，追求极致响应速度。
-- **Excel/TSV 支持**：直接粘贴从 Excel、WPS 或 Google Sheets 复制的内容。
+- **Excel/TSV 支持**：直接粘贴从 Excel、WPS 或 Google Sheets 复制的内容（Tab 分隔符）。
 - **全键盘操作**：使用 `↑` `↓` `←` `→` 进行标注，卡片切换瞬间完成。
 - **自定义标签**：用户可灵活定义四个按键对应的分类。
 - **快速导出**：一键导出 Markdown 表格，或点击 "Copy for Excel" 直接贴回表格软件。
 
 ## 🚀 下载使用 (Releases)
 
-如果你只想使用程序，请前往 [Releases](https://github.com/your-username/lyj-quick-read-card/releases) 页面下载适合你系统的版本：
+如果你只想使用程序，请前往 [Releases](https://github.com/cheercheung/lyj-quick-read-card/releases) 页面下载：
 - **macOS**: 下载 `.dmg` 或 `.zip` 文件。
-- **Windows**: 下载 `Portable` 版本即开即用（即将推出）。
+- **Windows**: 下载 `Portable` 版本。
 
 ## 🛠 开发与构建
 
@@ -36,6 +36,12 @@
    ```bash
    npm run package
    ```
+
+## ⚙️ 实现亮点
+
+- **高性能解析**：自动检测 Tab (Excel) 与 Pipe (Markdown) 格式。
+- **极致响应**：移除所有滑动动画和交互延迟，实现零延迟反馈。
+- **Electron 驱动**：使用 Electron 将 Web 技术转换为原生 macOS 轻量应用。
 
 ## ⌨️ 快捷键说明
 
