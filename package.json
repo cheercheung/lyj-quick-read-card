@@ -2,13 +2,58 @@
   "name": "lyj-quick-read-card",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
+  "description": "A minimalist, high-speed data labelling tool that converts table cells into cards for rapid categorization via arrow keys.",
+  "author": "cheercheung",
+  "homepage": "https://github.com/cheercheung/lyj-quick-read-card",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cheercheung/lyj-quick-read-card.git"
+  },
+  "type": "commonjs",
+  "main": "main.js",
   "scripts": {
+    "start": "electron .",
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "package": "electron-builder -m",
+    "release": "electron-builder -mwl"
+  },
+  "build": {
+    "appId": "com.quickread.card",
+    "productName": "QuickReadCard",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "style.css",
+      "app.js",
+      "main.js",
+      "package.json"
+    ]
   },
   "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^24.0.0",
     "vite": "^6.0.0"
   }
 }
