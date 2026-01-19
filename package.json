@@ -43,6 +43,13 @@
     "directories": {
       "output": "dist"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "cheercheung",
+        "repo": "lyj-quick-read-card"
+      }
+    ],
     "files": [
       "index.html",
       "style.css",
