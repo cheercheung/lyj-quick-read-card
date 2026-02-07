@@ -39,6 +39,19 @@ Or Markdown:
                 <select id="column-select"></select>
             </div>
 
+            <div class="form-group">
+                <label for="label-group-select">Label Presets (Saved)</label>
+                <div class="row-inline">
+                    <select id="label-group-select"></select>
+                    <button id="btn-delete-group" class="secondary danger">Delete</button>
+                </div>
+                <div class="row-inline" style="margin-top: 0.75rem;">
+                    <input id="label-group-name" type="text" placeholder="Preset name (e.g. Sentiment)">
+                    <button id="btn-save-group" class="secondary">Save</button>
+                </div>
+                <p class="help-text">Saved locally on this device. Select a preset to apply.</p>
+            </div>
+
             <p style="margin-top: 2rem; color: var(--text-dim); text-align: center;">Set labels for your arrow keys:</p>
             <div class="key-grid">
                 <input type="text" id="up-label" class="key-input" placeholder="Up Label" value="Positive">

@@ -15,12 +15,205 @@ let config = {
 let currentIndex = 0;
 let results = [];
 
+// --- Storage: Label Presets ---
+const LABEL_PRESETS_STORAGE_KEY = "qrc_label_presets_v1";
+const LAST_USED_LABELS_STORAGE_KEY = "qrc_last_used_labels_v1";
+const SELECTED_PRESET_STORAGE_KEY = "qrc_selected_label_preset_v1";
+const LAST_USED_PRESET_VALUE = "__last_used__";
+let refreshLabelPresetsSelect = null;
+
+function safeJsonParse(value, fallbackValue) {
+    try {
+        return JSON.parse(value);
+    } catch (_) {
+        return fallbackValue;
+    }
+}
+
+function normalizeLabels(labels) {
+    const safeLabels = labels && typeof labels === "object" ? labels : {};
+    return {
+        ArrowUp: (safeLabels.ArrowUp ?? "").toString(),
+        ArrowLeft: (safeLabels.ArrowLeft ?? "").toString(),
+        ArrowRight: (safeLabels.ArrowRight ?? "").toString(),
+        ArrowDown: (safeLabels.ArrowDown ?? "").toString()
+    };
+}
+
+function loadLabelPresets() {
+    const raw = localStorage.getItem(LABEL_PRESETS_STORAGE_KEY) || "{}";
+    const parsed = safeJsonParse(raw, {});
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+
+    const presets = {};
+    Object.keys(parsed).forEach((name) => {
+        if (!name || typeof name !== "string") return;
+        presets[name] = normalizeLabels(parsed[name]);
+    });
+
+    return presets;
+}
+
+function saveLabelPresets(presets) {
+    localStorage.setItem(LABEL_PRESETS_STORAGE_KEY, JSON.stringify(presets));
+}
+
+function loadLastUsedLabels() {
+    const raw = localStorage.getItem(LAST_USED_LABELS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = safeJsonParse(raw, null);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return normalizeLabels(parsed);
+}
+
+function saveLastUsedLabels(labels) {
+    localStorage.setItem(LAST_USED_LABELS_STORAGE_KEY, JSON.stringify(normalizeLabels(labels)));
+}
+
+function getLabelsFromInputs() {
+    return normalizeLabels({
+        ArrowUp: document.getElementById("up-label")?.value || "",
+        ArrowLeft: document.getElementById("left-label")?.value || "",
+        ArrowRight: document.getElementById("right-label")?.value || "",
+        ArrowDown: document.getElementById("down-label")?.value || ""
+    });
+}
+
+function applyLabelsToInputs(labels) {
+    const normalized = normalizeLabels(labels);
+    const upInput = document.getElementById("up-label");
+    const leftInput = document.getElementById("left-label");
+    const rightInput = document.getElementById("right-label");
+    const downInput = document.getElementById("down-label");
+
+    if (upInput) upInput.value = normalized.ArrowUp;
+    if (leftInput) leftInput.value = normalized.ArrowLeft;
+    if (rightInput) rightInput.value = normalized.ArrowRight;
+    if (downInput) downInput.value = normalized.ArrowDown;
+}
+
+function isReservedPresetName(presetName) {
+    const name = (presetName || "").trim().toLowerCase();
+    return name === "last used" || name === "最近使用";
+}
+
+function initializeLabelPresetsUI() {
+    const select = document.getElementById("label-group-select");
+    const nameInput = document.getElementById("label-group-name");
+    const saveButton = document.getElementById("btn-save-group");
+    const deleteButton = document.getElementById("btn-delete-group");
+    if (!select || !nameInput || !saveButton || !deleteButton) return;
+
+    const renderSelect = (selectedValue) => {
+        const presets = loadLabelPresets();
+        const lastUsedLabels = loadLastUsedLabels();
+
+        select.innerHTML = "";
+
+        if (lastUsedLabels) {
+            const opt = document.createElement("option");
+            opt.value = LAST_USED_PRESET_VALUE;
+            opt.textContent = "Last used";
+            select.appendChild(opt);
+        }
+
+        Object.keys(presets)
+            .sort((a, b) => a.localeCompare(b))
+            .forEach((name) => {
+                const opt = document.createElement("option");
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+
+        if (select.options.length === 0) {
+            const opt = document.createElement("option");
+            opt.value = "";
+            opt.textContent = "No saved presets";
+            select.appendChild(opt);
+        }
+
+        const desiredValue = selectedValue ?? select.value;
+        const optionValues = Array.from(select.options).map(o => o.value);
+        select.value = optionValues.includes(desiredValue) ? desiredValue : select.options[0].value;
+
+        const isDeletable = select.value && select.value !== LAST_USED_PRESET_VALUE;
+        deleteButton.disabled = !isDeletable;
+    };
+    refreshLabelPresetsSelect = () => renderSelect(select.value);
+
+    const applySelectedPreset = () => {
+        const selectedValue = select.value;
+        if (!selectedValue) return;
+
+        if (selectedValue === LAST_USED_PRESET_VALUE) {
+            const lastUsedLabels = loadLastUsedLabels();
+            if (!lastUsedLabels) return;
+            applyLabelsToInputs(lastUsedLabels);
+            nameInput.value = "";
+            deleteButton.disabled = true;
+            return;
+        }
+
+        const presets = loadLabelPresets();
+        const labels = presets[selectedValue];
+        if (!labels) return;
+        applyLabelsToInputs(labels);
+        nameInput.value = selectedValue;
+        deleteButton.disabled = false;
+    };
+
+    renderSelect(localStorage.getItem(SELECTED_PRESET_STORAGE_KEY));
+    applySelectedPreset();
+
+    select.addEventListener("change", () => {
+        localStorage.setItem(SELECTED_PRESET_STORAGE_KEY, select.value);
+        applySelectedPreset();
+    });
+
+    saveButton.addEventListener("click", () => {
+        const presetName = (nameInput.value || "").trim();
+        if (!presetName) return alert("Please enter a preset name");
+        if (isReservedPresetName(presetName)) return alert("This preset name is reserved");
+
+        const presets = loadLabelPresets();
+        if (presets[presetName]) {
+            const ok = confirm(`Preset "${presetName}" already exists. Overwrite it?`);
+            if (!ok) return;
+        }
+
+        presets[presetName] = getLabelsFromInputs();
+        saveLabelPresets(presets);
+        localStorage.setItem(SELECTED_PRESET_STORAGE_KEY, presetName);
+        renderSelect(presetName);
+        applySelectedPreset();
+    });
+
+    deleteButton.addEventListener("click", () => {
+        const selectedValue = select.value;
+        if (!selectedValue || selectedValue === LAST_USED_PRESET_VALUE) return;
+
+        const ok = confirm(`Delete preset "${selectedValue}"?`);
+        if (!ok) return;
+
+        const presets = loadLabelPresets();
+        delete presets[selectedValue];
+        saveLabelPresets(presets);
+
+        localStorage.setItem(SELECTED_PRESET_STORAGE_KEY, LAST_USED_PRESET_VALUE);
+        renderSelect(LAST_USED_PRESET_VALUE);
+        applySelectedPreset();
+    });
+}
+
 // DOM Elements
 const stages = ['step-1', 'step-2', 'step-3', 'step-4'];
 const showStage = (id) => {
     stages.forEach(s => document.getElementById(s).classList.remove('active'));
     document.getElementById(id).classList.add('active');
 };
+
+initializeLabelPresetsUI();
 
 // --- Step 1: Parsing ---
 document.getElementById('btn-parse').addEventListener('click', () => {
@@ -83,6 +276,9 @@ document.getElementById('btn-start').addEventListener('click', () => {
     config.labels.ArrowLeft = document.getElementById('left-label').value || "Left";
     config.labels.ArrowRight = document.getElementById('right-label').value || "Right";
     config.labels.ArrowDown = document.getElementById('down-label').value || "Down";
+
+    saveLastUsedLabels(config.labels);
+    if (typeof refreshLabelPresetsSelect === "function") refreshLabelPresetsSelect();
 
     // Update hints in UI
     document.querySelector('#hint-up label-text').textContent = config.labels.ArrowUp;
