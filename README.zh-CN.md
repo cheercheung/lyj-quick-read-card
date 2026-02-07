@@ -37,6 +37,19 @@
    npm run package
    ```
 
+## 🧩 发版（自动打包并上传到 GitHub Release）
+
+仓库内置 GitHub Actions（`.github/workflows/release.yml`）。发版只需要推送一个 `vX.Y.Z` 的 tag：
+
+```bash
+git add -A
+git commit -m "release: v1.0.1"
+git tag v1.0.1
+git push origin main --tags
+```
+
+Actions 构建成功后，产物会自动出现在 GitHub 的 `Releases` 页面（macOS `.dmg/.zip`、Windows `.exe`、Linux `.AppImage`）。
+
 ## ⚙️ 实现亮点
 
 - **高性能解析**：自动检测 Tab (Excel) 与 Pipe (Markdown) 格式。
