@@ -1,7 +1,7 @@
 {
   "name": "lyj-quick-read-card",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A minimalist, high-speed data labelling tool that converts table cells into cards for rapid categorization via arrow keys.",
   "author": "cheercheung",
   "homepage": "https://github.com/cheercheung/lyj-quick-read-card",
