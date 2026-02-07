@@ -39,7 +39,7 @@
 
 ## 🧩 发版（自动打包并上传到 GitHub Release）
 
-仓库内置 GitHub Actions（`.github/workflows/release.yml`）。发版只需要推送一个 `vX.Y.Z` 的 tag：
+仓库内置 GitHub Actions（`.github/workflows/build.yml`）。发版只需要推送一个 `vX.Y.Z` 的 tag：
 
 ```bash
 git add -A
