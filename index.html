@@ -103,9 +103,11 @@ Or Markdown:
             <h2 style="margin-bottom: 1rem;">Labelling Complete!</h2>
             <p class="subtitle">A new column has been added to your table.</p>
 
-            <div style="margin: 1rem 0; display: flex; gap: 1rem; justify-content: center;">
+            <div style="margin: 1rem 0 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button id="btn-restart" class="secondary">Start Over</button>
                 <button id="btn-copy" class="secondary">Copy Markdown</button>
                 <button id="btn-copy-excel" class="secondary">Copy for Excel</button>
+                <button id="btn-export">Download Markdown</button>
             </div>
 
             <div class="result-table-wrapper">
@@ -115,10 +117,6 @@ Or Markdown:
                 </table>
             </div>
 
-            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
-                <button id="btn-restart" class="secondary">Start Over</button>
-                <button id="btn-export">Download Markdown</button>
-            </div>
         </section>
     </div>
 
