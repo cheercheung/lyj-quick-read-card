@@ -25,9 +25,9 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    width: min(96vw, 1400px);
     margin: 0 auto;
-    padding: 2rem;
+    padding: clamp(1rem, 2.5vw, 2rem);
 }
 
 header {
@@ -203,7 +203,7 @@ button.danger:hover {
 
 .card-display {
     width: 100%;
-    max-width: 500px;
+    max-width: min(900px, 100%);
     min-height: 250px;
     display: flex;
     align-items: center;
@@ -283,4 +283,30 @@ th {
     color: #ffffff;
     text-transform: uppercase;
     font-size: 0.7rem;
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .glass-pane {
+        padding: 1rem;
+    }
+
+    .row-inline {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .row-inline button {
+        width: 100%;
+    }
+
+    .card-display {
+        min-height: 200px;
+        padding: 1.5rem;
+        font-size: 1rem;
+    }
 }
