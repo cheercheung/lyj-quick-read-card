@@ -346,16 +346,20 @@ function renderResultTable() {
     tbody.innerHTML = tableData.rows.map((row, i) => `
         <tr>
             ${row.map(c => `<td>${c}</td>`).join('')}
-            <td style="color: var(--primary); font-weight: bold;">${results[i]}</td>
+            <td style="color: var(--primary); font-weight: bold;">${getResultLabel(i)}</td>
         </tr>
     `).join('');
+}
+
+function getResultLabel(index) {
+    return results[index] ?? '';
 }
 
 function generateMarkdown() {
     let md = `| ${tableData.headers.join(' | ')} | Label |\n`;
     md += `| ${tableData.headers.map(() => '---').join(' | ')} | --- |\n`;
     tableData.rows.forEach((row, i) => {
-        md += `| ${row.join(' | ')} | ${results[i]} |\n`;
+        md += `| ${row.join(' | ')} | ${getResultLabel(i)} |\n`;
     });
     return md;
 }
@@ -363,10 +367,14 @@ function generateMarkdown() {
 function generateTSV() {
     let tsv = [...tableData.headers, "Label"].join('\t') + '\n';
     tableData.rows.forEach((row, i) => {
-        tsv += [...row, results[i]].join('\t') + '\n';
+        tsv += [...row, getResultLabel(i)].join('\t') + '\n';
     });
     return tsv;
 }
+
+document.getElementById('btn-finish-now').addEventListener('click', () => {
+    finishLabelling();
+});
 
 document.getElementById('btn-export').addEventListener('click', () => {
     const md = generateMarkdown();
