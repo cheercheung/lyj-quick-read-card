@@ -25,6 +25,10 @@ Or Markdown:
 |---|---|
 | 1 | Sample |"></textarea>
             </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                <button id="btn-import-csv" class="secondary">Import CSV</button>
+                <span id="csv-import-status" class="help-text" style="margin-top: 0;">No CSV imported</span>
+            </div>
             <div style="text-align: right;">
                 <button id="btn-parse">Next: Configure &rarr;</button>
             </div>
@@ -54,10 +58,10 @@ Or Markdown:
 
             <p style="margin-top: 2rem; color: var(--text-dim); text-align: center;">Set labels for your arrow keys:</p>
             <div class="key-grid">
-                <input type="text" id="up-label" class="key-input" placeholder="Up Label" value="Positive">
-                <input type="text" id="left-label" class="key-input" placeholder="Left Label" value="Neutral">
-                <input type="text" id="right-label" class="key-input" placeholder="Right Label" value="Negative">
-                <input type="text" id="down-label" class="key-input" placeholder="Down Label" value="Irrelevant">
+                <input type="text" id="up-label" class="key-input" placeholder="Up Label" value="重点看">
+                <input type="text" id="left-label" class="key-input" placeholder="Left Label" value="还可以">
+                <input type="text" id="right-label" class="key-input" placeholder="Right Label" value="待看">
+                <input type="text" id="down-label" class="key-input" placeholder="Down Label" value="放下">
             </div>
 
             <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
@@ -105,13 +109,13 @@ Or Markdown:
         <!-- Step 4: Results -->
         <section id="step-4" class="step glass-pane completion-overlay">
             <h2 style="margin-bottom: 1rem;">Labelling Complete!</h2>
-            <p class="subtitle">A new column has been added to your table.</p>
+            <p id="completion-subtitle" class="subtitle">Label column preview is ready below. Export to save it.</p>
 
             <div style="margin: 1rem 0 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
                 <button id="btn-restart" class="secondary">Start Over</button>
                 <button id="btn-copy" class="secondary">Copy Markdown</button>
                 <button id="btn-copy-excel" class="secondary">Copy for Excel</button>
-                <button id="btn-export">Download Markdown</button>
+                <button id="btn-export">Save</button>
             </div>
 
             <div class="result-table-wrapper">

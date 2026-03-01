@@ -1,19 +1,26 @@
 // State Management
+const DEFAULT_LABELS = {
+    ArrowUp: "重点看",
+    ArrowDown: "放下",
+    ArrowLeft: "还可以",
+    ArrowRight: "待看"
+};
+
 let tableData = {
     headers: [],
     rows: []
 };
 let config = {
     contentColIndex: 0,
-    labels: {
-        ArrowUp: "重点看",
-        ArrowDown: "放下",
-        ArrowLeft: "还可以",
-        ArrowRight: "待看"
-    }
+    labels: { ...DEFAULT_LABELS }
 };
 let currentIndex = 0;
 let results = [];
+let importedSource = {
+    type: "paste",
+    csvFilePath: "",
+    csvFileName: ""
+};
 
 // --- Storage: Label Presets ---
 const LABEL_PRESETS_STORAGE_KEY = "qrc_label_presets_v1";
@@ -33,10 +40,10 @@ function safeJsonParse(value, fallbackValue) {
 function normalizeLabels(labels) {
     const safeLabels = labels && typeof labels === "object" ? labels : {};
     return {
-        ArrowUp: (safeLabels.ArrowUp ?? "").toString(),
-        ArrowLeft: (safeLabels.ArrowLeft ?? "").toString(),
-        ArrowRight: (safeLabels.ArrowRight ?? "").toString(),
-        ArrowDown: (safeLabels.ArrowDown ?? "").toString()
+        ArrowUp: (safeLabels.ArrowUp ?? DEFAULT_LABELS.ArrowUp).toString(),
+        ArrowLeft: (safeLabels.ArrowLeft ?? DEFAULT_LABELS.ArrowLeft).toString(),
+        ArrowRight: (safeLabels.ArrowRight ?? DEFAULT_LABELS.ArrowRight).toString(),
+        ArrowDown: (safeLabels.ArrowDown ?? DEFAULT_LABELS.ArrowDown).toString()
     };
 }
 
@@ -215,6 +222,139 @@ const showStage = (id) => {
 
 initializeLabelPresetsUI();
 
+function parseCSVText(csvText) {
+    const allRows = [];
+    let currentRow = [];
+    let currentCell = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < csvText.length; i++) {
+        const char = csvText[i];
+        const nextChar = csvText[i + 1];
+
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                currentCell += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+            continue;
+        }
+
+        if (!inQuotes && char === ',') {
+            currentRow.push(currentCell);
+            currentCell = "";
+            continue;
+        }
+
+        if (!inQuotes && (char === '\n' || char === '\r')) {
+            if (char === '\r' && nextChar === '\n') i++;
+            currentRow.push(currentCell);
+            allRows.push(currentRow);
+            currentRow = [];
+            currentCell = "";
+            continue;
+        }
+
+        currentCell += char;
+    }
+
+    currentRow.push(currentCell);
+    allRows.push(currentRow);
+
+    while (
+        allRows.length &&
+        allRows[allRows.length - 1].every(cell => cell.trim() === "")
+    ) {
+        allRows.pop();
+    }
+
+    if (!allRows.length) return { headers: [], rows: [] };
+
+    const headers = allRows[0].map(cell => cell.trim());
+    const rows = allRows.slice(1);
+    return { headers, rows };
+}
+
+function applyParsedTable(headers, rows, sourceType = "paste", sourceInfo = {}) {
+    if (!headers.length) {
+        alert("CSV has no header row");
+        return false;
+    }
+
+    tableData.headers = headers;
+    tableData.rows = rows;
+
+    importedSource.type = sourceType;
+    importedSource.csvFilePath = sourceInfo.csvFilePath || "";
+    importedSource.csvFileName = sourceInfo.csvFileName || "";
+
+    const select = document.getElementById('column-select');
+    select.innerHTML = '';
+    tableData.headers.forEach((h, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = h || `Column ${i + 1}`;
+        select.appendChild(opt);
+    });
+
+    if (tableData.headers.length > 1) select.selectedIndex = 1;
+
+    const statusEl = document.getElementById("csv-import-status");
+    if (statusEl) {
+        statusEl.textContent = sourceType.startsWith("csv")
+            ? `Imported: ${importedSource.csvFileName}`
+            : "No CSV imported";
+    }
+
+    return true;
+}
+
+async function importCSVFromFile() {
+    if (window.quickReadCardAPI?.openCsvFile) {
+        try {
+            const result = await window.quickReadCardAPI.openCsvFile();
+            if (!result || result.canceled) return;
+
+            const parsed = parseCSVText(result.content || "");
+            if (!applyParsedTable(parsed.headers, parsed.rows, "csv-electron", {
+                csvFilePath: result.filePath,
+                csvFileName: result.fileName
+            })) {
+                return;
+            }
+
+            showStage('step-2');
+        } catch (error) {
+            alert(`Failed to import CSV: ${error?.message || error}`);
+        }
+        return;
+    }
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".csv,text/csv";
+    fileInput.addEventListener("change", async () => {
+        try {
+            const selectedFile = fileInput.files?.[0];
+            if (!selectedFile) return;
+
+            const parsed = parseCSVText(await selectedFile.text());
+            if (!applyParsedTable(parsed.headers, parsed.rows, "csv-browser", {
+                csvFileName: selectedFile.name
+            })) {
+                return;
+            }
+
+            showStage('step-2');
+        } catch (error) {
+            alert(`Failed to import CSV: ${error?.message || error}`);
+        }
+    }, { once: true });
+    fileInput.click();
+}
+
 // --- Step 1: Parsing ---
 document.getElementById('btn-parse').addEventListener('click', () => {
     const input = document.getElementById('table-input').value.trim();
@@ -248,34 +388,21 @@ document.getElementById('btn-parse').addEventListener('click', () => {
         rows = lines.map(line => [line.trim()]);
     }
 
-    tableData.headers = headers;
-    tableData.rows = rows;
-
-    // Populate Column Select
-    const select = document.getElementById('column-select');
-    select.innerHTML = '';
-    tableData.headers.forEach((h, i) => {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = h || `Column ${i + 1}`;
-        select.appendChild(opt);
-    });
-
-    // Auto-select column 1 if it exists
-    if (tableData.headers.length > 1) select.selectedIndex = 1;
+    applyParsedTable(headers, rows, "paste");
 
     showStage('step-2');
 });
 
+document.getElementById("btn-import-csv").addEventListener("click", importCSVFromFile);
 document.getElementById('btn-back-1').addEventListener('click', () => showStage('step-1'));
 
 // --- Step 2: Configuration ---
-document.getElementById('btn-start').addEventListener('click', () => {
+function applyConfigAndStartLabelling() {
     config.contentColIndex = parseInt(document.getElementById('column-select').value);
-    config.labels.ArrowUp = document.getElementById('up-label').value || "Up";
-    config.labels.ArrowLeft = document.getElementById('left-label').value || "Left";
-    config.labels.ArrowRight = document.getElementById('right-label').value || "Right";
-    config.labels.ArrowDown = document.getElementById('down-label').value || "Down";
+    config.labels.ArrowUp = document.getElementById('up-label').value || DEFAULT_LABELS.ArrowUp;
+    config.labels.ArrowLeft = document.getElementById('left-label').value || DEFAULT_LABELS.ArrowLeft;
+    config.labels.ArrowRight = document.getElementById('right-label').value || DEFAULT_LABELS.ArrowRight;
+    config.labels.ArrowDown = document.getElementById('down-label').value || DEFAULT_LABELS.ArrowDown;
 
     saveLastUsedLabels(config.labels);
     if (typeof refreshLabelPresetsSelect === "function") refreshLabelPresetsSelect();
@@ -289,6 +416,10 @@ document.getElementById('btn-start').addEventListener('click', () => {
     currentIndex = 0;
     results = [];
     startLabelling();
+}
+
+document.getElementById('btn-start').addEventListener('click', () => {
+    applyConfigAndStartLabelling();
 });
 
 // --- Step 3: Labelling ---
@@ -335,6 +466,20 @@ window.addEventListener('keydown', (e) => {
 // --- Step 4: Completion ---
 function finishLabelling() {
     showStage('step-4');
+    const isElectronCsv = importedSource.type === "csv-electron";
+    const isBrowserCsv = importedSource.type === "csv-browser";
+    const subtitle = document.getElementById("completion-subtitle");
+    if (subtitle) {
+        subtitle.textContent = isElectronCsv
+            ? `Ready to overwrite: ${importedSource.csvFileName} (adds Label column)`
+            : isBrowserCsv
+                ? "Label column preview is ready below. Click Save to download a new CSV file."
+                : "Label column preview is ready below. Export to save it.";
+    }
+    const exportButton = document.getElementById("btn-export");
+    if (exportButton) {
+        exportButton.textContent = "Save";
+    }
     renderResultTable();
 }
 
@@ -372,11 +517,62 @@ function generateTSV() {
     return tsv;
 }
 
+function escapeCSVCell(value) {
+    const text = (value ?? "").toString();
+    if (text.includes('"') || text.includes(',') || text.includes('\n') || text.includes('\r')) {
+        return `"${text.replace(/"/g, '""')}"`;
+    }
+    return text;
+}
+
+function generateCSV() {
+    const headerLine = [...tableData.headers, "Label"].map(escapeCSVCell).join(',');
+    const rowLines = tableData.rows.map((row, i) => {
+        return [...row, getResultLabel(i)].map(escapeCSVCell).join(',');
+    });
+    return [headerLine, ...rowLines].join('\n');
+}
+
 document.getElementById('btn-finish-now').addEventListener('click', () => {
     finishLabelling();
 });
 
-document.getElementById('btn-export').addEventListener('click', () => {
+document.getElementById('btn-export').addEventListener('click', async () => {
+    if (importedSource.type === "csv-electron") {
+        if (!window.quickReadCardAPI?.saveCsvFile) {
+            return alert("CSV overwrite is only available in Electron app");
+        }
+        try {
+            const csv = generateCSV();
+            const response = await window.quickReadCardAPI.saveCsvFile({
+                filePath: importedSource.csvFilePath,
+                content: csv
+            });
+            if (!response?.ok) {
+                throw new Error(response?.message || "Save failed");
+            }
+            alert(`Saved and overwritten: ${importedSource.csvFileName}`);
+            return;
+        } catch (error) {
+            alert(`Failed to overwrite CSV: ${error?.message || error}`);
+            return;
+        }
+    }
+
+    if (importedSource.type === "csv-browser") {
+        const csv = generateCSV();
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const sourceName = importedSource.csvFileName || "labelled_table.csv";
+        const hasCsvExtension = sourceName.toLowerCase().endsWith(".csv");
+        const baseName = hasCsvExtension ? sourceName.slice(0, -4) : sourceName;
+        a.href = url;
+        a.download = `${baseName}_labelled.csv`;
+        a.click();
+        return;
+    }
+
     const md = generateMarkdown();
     const blob = new Blob([md], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
@@ -415,5 +611,44 @@ document.getElementById('btn-copy-excel').addEventListener('click', () => {
 });
 
 document.getElementById('btn-restart').addEventListener('click', () => {
+    importedSource = {
+        type: "paste",
+        csvFilePath: "",
+        csvFileName: ""
+    };
+    const statusEl = document.getElementById("csv-import-status");
+    if (statusEl) statusEl.textContent = "No CSV imported";
     showStage('step-1');
 });
+
+async function tryLaunchCsvImportAndStart() {
+    if (!window.quickReadCardAPI?.getLaunchCsvFile) return;
+
+    try {
+        const launchCsv = await window.quickReadCardAPI.getLaunchCsvFile();
+        if (!launchCsv?.ok) {
+            if (launchCsv?.error) {
+                alert(`Failed to load launch CSV: ${launchCsv.error}`);
+            }
+            return;
+        }
+
+        const parsed = parseCSVText(launchCsv.content || "");
+        const didApply = applyParsedTable(parsed.headers, parsed.rows, "csv-electron", {
+            csvFilePath: launchCsv.filePath,
+            csvFileName: launchCsv.fileName
+        });
+        if (!didApply) return;
+
+        const select = document.getElementById("column-select");
+        if (select && select.options.length) {
+            select.selectedIndex = tableData.headers.length > 1 ? 1 : 0;
+        }
+
+        applyConfigAndStartLabelling();
+    } catch (error) {
+        alert(`Failed to load launch CSV: ${error?.message || error}`);
+    }
+}
+
+tryLaunchCsvImportAndStart();

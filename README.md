@@ -32,7 +32,11 @@ To modify or build the project yourself:
    ```bash
    npm start
    ```
-3. **Build for Distribution (macOS)**:
+3. **Launch with a CSV and start labelling directly**:
+   ```bash
+   npm run start:csv -- /absolute/path/to/data.csv
+   ```
+4. **Build for Distribution (macOS)**:
    ```bash
    npm run package
    ```

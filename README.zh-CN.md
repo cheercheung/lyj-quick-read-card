@@ -32,7 +32,11 @@
    ```bash
    npm start
    ```
-3. **分发打包 (macOS)**:
+3. **带 CSV 路径启动并直接开始标注**:
+   ```bash
+   npm run start:csv -- /absolute/path/to/data.csv
+   ```
+4. **分发打包 (macOS)**:
    ```bash
    npm run package
    ```
